@@ -7,35 +7,36 @@ import Exceptions.itemIsNullException;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class StringListImpl implements StringList{
+
+public class IntegerListImpl implements IntegerList {
+
     private final static int DEFAULT_CAPACITY = 10;
 
-    private final String[] storage;
+    private Integer[] storage;
     private int size;
 
-    public StringListImpl() {
+    public IntegerListImpl() {
         this(DEFAULT_CAPACITY);
     }
 
-    public StringListImpl(int size) {
+    public IntegerListImpl(int size) {
         if (size <= 0) {
             throw new incorrectCapasityException("capacity should be more then 0");
         }
-        storage = new String[DEFAULT_CAPACITY];
+        storage = new Integer[DEFAULT_CAPACITY];
         size = 0;
     }
 
     @Override
-    public String add(String item) {
+    public Integer add(Integer item) {
         return add(size, item);
     }
 
     @Override
-    public String add(int index, String item) {
+    public Integer add(int index, Integer item) {
         checkIsNull(item);
         if (size == storage.length) {
-            //расширение массива
-            throw new incorrectIndexException();
+            grow();
         }
         checkIndex(index, false);
         if (index < size) {
@@ -46,42 +47,44 @@ public class StringListImpl implements StringList{
     }
 
     @Override
-    public String set(int index, String item) {
+    public Integer set(int index, Integer item) {
         checkIsNull(item);
         checkIndex(index, true);
         return storage[index] = item;
     }
 
     @Override
-    public String remove(String item) {
+    public Integer remove(Integer item) {
         return remove(indexOf(item));
     }
 
     @Override
-    public String remove(int index) {
+    public Integer remove(int index) {
         checkIndex(index, true);
         if (index < size - 1) {
             System.arraycopy(storage, index + 1, storage, index, size - index - 1);
         }
-        String removed = storage[index];
+        Integer removed = storage[index];
         storage[--size] = null;
         return removed;
     }
 
     @Override
-    public boolean contains(String item) {
+    public boolean contains(Integer item) {
         checkIsNull(item);
-        for (int i = 0; i < size; i++) {
-            if (storage[i].equals(item)) {
-                return true;
-            }
-
-        }
-        return false;
+//        for (int i = 0; i < size; i++) {
+//            if (storage[i].equals(item)) {
+//                return true;
+//            }
+//        }
+//        return false;
+        Integer[] copy = toArray();
+        quickSort(copy, 0, copy.length - 1);
+        return contains(copy, item);
     }
 
     @Override
-    public int indexOf(String item) {
+    public int indexOf(Integer item) {
         checkIsNull(item);
         for (int i = 0; i < size; i++) {
             if (storage[i].equals(item)) {
@@ -93,7 +96,7 @@ public class StringListImpl implements StringList{
     }
 
     @Override
-    public int lastIndexOf(String item) {
+    public int lastIndexOf(Integer item) {
         checkIsNull(item);
         for (int i = size - 1; i >= 0; i--) {
             if (storage[i].equals(item)) {
@@ -105,13 +108,13 @@ public class StringListImpl implements StringList{
     }
 
     @Override
-    public String get(int index) {
+    public Integer get(int index) {
         checkIndex(index, true);
         return storage[index];
     }
 
     @Override
-    public boolean equals(StringList otherList) {
+    public boolean equals(IntegerList otherList) {
         if (size() != otherList.size()) {
             return false;
         }
@@ -142,11 +145,66 @@ public class StringListImpl implements StringList{
     }
 
     @Override
-    public String[] toArray() {
+    public Integer[] toArray() {
         return Arrays.copyOf(storage, size);
     }
 
-    private void checkIsNull(String item) {
+    private void grow() {
+        storage = Arrays.copyOf(storage, storage.length * 3 / 2);
+    }
+
+    private static void quickSort(Integer[] arr, int begin, int end) {
+        if (begin < end) {
+            int partitionIndex = partition(arr, begin, end);
+
+            quickSort(arr, begin, partitionIndex - 1);
+            quickSort(arr, partitionIndex + 1, end);
+        }
+    }
+
+    private static int partition(Integer[] arr, int begin, int end) {
+        Integer pivot = arr[end];
+        int i = (begin - 1);
+
+        for (int j = begin; j < end; j++) {
+            if (arr[j].compareTo(pivot) <= 0) {
+                i++;
+
+                swapElements(arr, i, j);
+            }
+        }
+
+        swapElements(arr, i + 1, end);
+        return i + 1;
+    }
+
+    private static void swapElements(Integer[] array, int i, int j) {
+        Integer tmp = array[i];
+        array[i] = array[j];
+        array[j] = tmp;
+    }
+
+    private static boolean contains(Integer[] arr, Integer element) {
+        int min = 0;
+        int max = arr.length - 1;
+
+        while (min <= max) {
+            int mid = (min + max) / 2;
+
+            if (element.equals(arr[mid])) {
+                return true;
+            }
+
+            if (element.compareTo(arr[mid]) < 0) {
+                max = mid - 1;
+            } else {
+                min = mid + 1;
+            }
+        }
+        return false;
+    }
+
+    private void checkIsNull(Integer item) {
         if (Objects.isNull(item)) {
             throw new itemIsNullException();
 
@@ -157,6 +215,6 @@ public class StringListImpl implements StringList{
         if (index < 0 || include ? index >= size : index > size) {
             throw new incorrectIndexException();
         }
-
     }
+
 }
