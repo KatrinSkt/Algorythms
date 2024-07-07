@@ -7,11 +7,12 @@ import Exceptions.itemIsNullException;
 import java.util.Arrays;
 import java.util.Objects;
 
+
 public class IntegerListImpl implements IntegerList {
 
     private final static int DEFAULT_CAPACITY = 10;
 
-    private final Integer[] storage;
+    private Integer[] storage;
     private int size;
 
     public IntegerListImpl() {
@@ -35,8 +36,7 @@ public class IntegerListImpl implements IntegerList {
     public Integer add(int index, Integer item) {
         checkIsNull(item);
         if (size == storage.length) {
-            //расширение массива
-            throw new incorrectIndexException();
+            grow();
         }
         checkIndex(index, false);
         if (index < size) {
@@ -79,7 +79,7 @@ public class IntegerListImpl implements IntegerList {
 //        }
 //        return false;
         Integer[] copy = toArray();
-        sortInsertion(copy);
+        quickSort(copy, 0, copy.length - 1);
         return contains(copy, item);
     }
 
@@ -149,16 +149,39 @@ public class IntegerListImpl implements IntegerList {
         return Arrays.copyOf(storage, size);
     }
 
-    private static void sortInsertion(Integer[] arr) {
-        for (int i = 1; i < arr.length; i++) {
-            Integer temp = arr[i];
-            int j = i;
-            while (j > 0 && arr[j - 1].compareTo(temp) >= 0) {
-                arr[j] = arr[j - 1];
-                j--;
-            }
-            arr[j] = temp;
+    private void grow() {
+        storage = Arrays.copyOf(storage, storage.length * 3 / 2);
+    }
+
+    private static void quickSort(Integer[] arr, int begin, int end) {
+        if (begin < end) {
+            int partitionIndex = partition(arr, begin, end);
+
+            quickSort(arr, begin, partitionIndex - 1);
+            quickSort(arr, partitionIndex + 1, end);
         }
+    }
+
+    private static int partition(Integer[] arr, int begin, int end) {
+        Integer pivot = arr[end];
+        int i = (begin - 1);
+
+        for (int j = begin; j < end; j++) {
+            if (arr[j].compareTo(pivot) <= 0) {
+                i++;
+
+                swapElements(arr, i, j);
+            }
+        }
+
+        swapElements(arr, i + 1, end);
+        return i + 1;
+    }
+
+    private static void swapElements(Integer[] array, int i, int j) {
+        Integer tmp = array[i];
+        array[i] = array[j];
+        array[j] = tmp;
     }
 
     private static boolean contains(Integer[] arr, Integer element) {
